@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Escape Room</title>
+    <link rel="stylesheet" href="./style/style.css" type="text/css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="./scripts/glMatrix-0.9.5.min.js" type="text/javascript"></script>
+    <script src="./scripts/escaperoom.js" type="text/javascript"></script>
+    <script src="./scripts/shaders.js" type="text/javascript"></script>
+    <script src="./scripts/buffers.js" type="text/javascript"></script>
+    <script src="./scripts/world.js" type="text/javascript"></script>
+    <script src="./scripts/animation.js" type="text/javascript"></script>
+    <script src="./scripts/collisions.js" type="text/javascript"></script>
+    <script src="./scripts/crates.js" type="text/javascript"></script>
+    <script src="./scripts/pictures.js"></script>
+    <script src="./scripts/plates.js"></script>
+    <script src="./scripts/balls.js" type="text/javascript"></script>
+    <script src="./scripts/draw.js" type="text/javascript"></script>
+    <script src="./scripts/keyboard.js" type="text/javascript"></script>
+    <script src="./scripts/targets.js"></script>
+    
+    <!-- Fragment shader program
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+
+        // uniform attribute for setting texture coordinates
+        varying vec2 vTextureCoord;
+        // uniform attribute for setting lighting
+        varying vec3 vLightWeighting;
+
+        // uniform attribute for setting 2D sampler
+        uniform sampler2D uSampler;
+
+        void main(void) {
+            // sample the fragment color from texture
+            vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+            gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a);
+        }
+    </script>
+
+     Vertex shader program    
+    <script id="shader-vs" type="x-shader/x-vertex">
+        // atributes for setting vertex position, normals and texture coordinates
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexNormal;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;	// model-view matrix
+        uniform mat4 uPMatrix;	// projection matrix
+        uniform mat3 uNMatrix;	// normal matrix
+
+        uniform vec3 uAmbientColor;	// ambient color uniform
+
+        uniform vec3 uPointLightingLocation;	// light direction uniform
+        uniform vec3 uPointLightingColor;		// light color
+
+        uniform bool uUseLighting;	// lighting switch
+
+        // variable for passing texture coordinates and lighting weights
+        // from vertex shader to fragment shader
+        varying vec2 vTextureCoord;
+        varying vec3 vLightWeighting;
+
+        void main(void) {
+            // calculate the vertex position
+            vec4 mvPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uPMatrix * mvPosition;
+            vTextureCoord = aTextureCoord;
+
+            if (!uUseLighting) {
+                vLightWeighting = vec3(1.0, 1.0, 1.0);
+            } else {
+                // transform normals
+                vec3 lightDirection = normalize(uPointLightingLocation - mvPosition.xyz);
+
+                // calculate weight for directional light
+                vec3 transformedNormal = uNMatrix * aVertexNormal;
+                float directionalLightWeighting = max(dot(transformedNormal, lightDirection), 0.0);
+
+                // calculate lighting
+                vLightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+            }
+        }
+    </script>-->
+
+    <!-- Fragment shader program -->
+		<script id="shader-fs" type="x-shader/x-fragment">
+		    precision mediump float;
+
+    		// atributes for setting vertex position, normals and texture coordinates
+		    varying vec2 vTextureCoord;
+		    varying vec3 vTransformedNormal;
+		    varying vec4 vPosition;
+
+		    uniform bool uUseLighting;	// lighting switch
+		    uniform bool uUseTextures;	// textre switch
+
+		    uniform vec3 uAmbientColor;	// ambient color uniform
+
+		    uniform vec3 uPointLightingLocation;	// light direction uniform
+		    uniform vec3 uPointLightingColor;		// light color
+
+			// uniform attribute for setting 2D sampler
+		    uniform sampler2D uSampler;
+
+
+		    void main(void) {
+		        vec3 lightWeighting;
+		        if (!uUseLighting) {
+		            lightWeighting = vec3(1.0, 1.0, 1.0);
+		        } else {
+		        	// transform normals
+		            vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+
+		            // calculate weight for directional light
+		            float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
+		            // calculate lighting
+		            lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+		        }
+
+		        vec4 fragmentColor;
+		        if (uUseTextures) {
+		            fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+		        } else {
+		            fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+		        }
+		        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
+		    }
+		</script>
+
+	    <!-- Vertex shader program -->
+		<script id="shader-vs" type="x-shader/x-vertex">
+    		// atributes for setting vertex position, normals and texture coordinates
+		    attribute vec3 aVertexPosition;
+		    attribute vec3 aVertexNormal;
+		    attribute vec2 aTextureCoord;
+
+		    uniform mat4 uMVMatrix;	// model-view matrix
+		    uniform mat4 uPMatrix;	// projection matrix
+		    uniform mat3 uNMatrix;	// normal matrix
+
+			// variable for passing texture coordinates and lighting weights
+			// from vertex shader to fragment shader
+		    varying vec2 vTextureCoord;
+		    varying vec3 vTransformedNormal;
+		    varying vec4 vPosition;
+
+
+		    void main(void) {
+		    	// calculate the vertex position
+		        vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		        gl_Position = uPMatrix * vPosition;
+		        vTextureCoord = aTextureCoord;
+		        vTransformedNormal = uNMatrix * aVertexNormal;
+		    }
+		</script>
+
+
+</head>
+
+<body onload="start()">
+    <div class="modal hide fade" id="myModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Modal title</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Modal body text goes here.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" onclick="start()">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div id="content">
+        <canvas id="glcanvas" height="700px" width="1440px">
+            No <code>&lt;canvas&lt;</code> support in your browser.
+        </canvas>
+    </div>
+</body>
+
+</html>

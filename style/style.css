@@ -1,0 +1,24 @@
+body{
+    background-color: lightgray !important;
+}
+
+#content{
+    margin-top: 10px;
+    text-align: center;
+}
+
+canvas{
+    border: 2px solid black;
+}
+
+#wrapper{
+    width: 720px;
+    background-color: whitesmoke;
+    text-align: center;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.title{
+    padding: 10px;
+}
